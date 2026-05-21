@@ -119,17 +119,6 @@ make flash
 
 ---
 
-## Implementation Results (Nexys A7 100T)
-
-| Resource | Available | Used | Utilization |
-|----------|-----------|------|-------------|
-| LUTs     | 63,400    | ~2,800 | ~4.4%    |
-| Flip-Flops | 126,800 | ~800   | ~0.6%    |
-| BRAM     | 270       | 4      | ~1.5%    |
-| DSPs     | 240       | 0      | 0%       |
-
----
-
 ## Development Workflow
 
 Each component was developed independently with its own testbench:
@@ -192,5 +181,4 @@ This bottom-up approach ensures each building block is verified before integrati
 
 ## Author
 
-**Johannes** — Electrical Engineering Student, FH Dortmund  
-Student Research Assistant (SHK) — IC-Lab, Prof. Karagounis  
+**Johannes** — Electrical Engineering Student, FH Dortmund

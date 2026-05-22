@@ -4,6 +4,7 @@ A fully functional RV32I processor implemented from scratch in VHDL, synthesized
 
 Built as a learning project to understand processor architecture from the ground up — every component designed, simulated, and verified independently before integration.
 
+Status (May 2026): Core ALU and Decoder are fully functional on hardware. Currently implementing Data Memory and exploring hazard unit strategies.
 ---
 
 ## Architecture

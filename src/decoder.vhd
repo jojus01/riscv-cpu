@@ -44,7 +44,7 @@ begin
         pc_src <= '0';
         imm <= (others => '0');
       
-      when "0010011" => 
+      when "0010011" =>               -- I-Type instructions 
         case inst(14 downto 12) is
           when "001" =>                         --SLLI
             alu_op <= '0' & inst(14 downto 12);
@@ -62,7 +62,7 @@ begin
             imm(31 downto 11) <= (others => inst(31));
         end case;
 
-        rs1 <= inst(19 downto 15);    -- I-Type. immediate operations
+        rs1 <= inst(19 downto 15);    -- I-Type. arithmetic immediate operations
         rd <= inst(11 downto 7);
         alu_src <= '1';           -- use immediate
         write_reg <= '1';

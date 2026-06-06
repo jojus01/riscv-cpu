@@ -163,7 +163,7 @@ This bottom-up approach ensures each building block is verified before integrati
 - [x] Program Counter
 - [x] Instruction Memory (BRAM)
 - [x] Instruction Decoder
-- [ ] Data Memory
+- [x] Data Memory
 - [ ] Datapath integration
 - [ ] Branch logic & pipeline flush
 - [ ] UART peripheral

@@ -164,8 +164,8 @@ This bottom-up approach ensures each building block is verified before integrati
 - [x] Instruction Memory (BRAM)
 - [x] Instruction Decoder
 - [x] Data Memory
-- [ ] Datapath integration
-- [ ] Branch logic & pipeline flush
+- [x] Datapath integration
+- [x] Branch logic & pipeline flush
 - [ ] UART peripheral
 - [ ] C toolchain integration
 - [ ] 5-stage pipeline

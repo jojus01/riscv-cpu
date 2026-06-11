@@ -17,7 +17,8 @@ entity decoder is
     write_mem : out STD_LOGIC;
     mem_to_reg : out STD_LOGIC;
     branch : out STD_LOGIC;                     -- for B-Type instruction
-    pc_src : out STD_LOGIC                        -- for J-Type instruction
+    pc_src : out STD_LOGIC;                        -- for J-Type instruction
+    jalr : out STD_LOGIC
     );
 end decoder;
 
@@ -25,6 +26,7 @@ architecture Behavioral of decoder is
 begin
 
   funct3 <= inst(14 downto 12);
+  jalr <= '1' when INST(6 downto 0) = "1100111" else '0';
 
   decode: process(inst)
   begin
@@ -63,6 +65,7 @@ begin
         end case;
 
         rs1 <= inst(19 downto 15);    -- I-Type. arithmetic immediate operations
+        rs2 <= (others => '0');
         rd <= inst(11 downto 7);
         alu_src <= '1';           -- use immediate
         write_reg <= '1';
@@ -74,6 +77,7 @@ begin
 
       when "0000011" =>           -- I-Type. Load instructions
         rs1 <= inst(19 downto 15);
+        rs2 <= (others => '0');
         rd <= inst(11 downto 7);
         alu_op <= "0000";
         alu_src <= '1';
@@ -90,6 +94,7 @@ begin
       when "0100011" =>         -- S-Type. store instructions
         rs1 <= inst(19 downto 15);
         rs2 <= inst(24 downto 20);
+        rd <= (others => '0');
         alu_op <= "0000";
         alu_src <= '1';
         write_reg <= '0';
@@ -105,6 +110,7 @@ begin
       when "1100011" =>     -- B-Type Branch operations
         rs1 <= inst(19 downto 15);
         rs2 <= inst(24 downto 20);
+        rd <= (others => '0');
         alu_op <= "1000";
         alu_src <= '0';
         write_reg <= '0';
@@ -112,12 +118,14 @@ begin
         write_mem <= '0';
         mem_to_reg <= '0';
         branch <= '1';
-        pc_src <= '1';
+        pc_src <= '0';
 
         imm(11 downto 0) <= inst(7) & inst(30 downto 25) & inst(11 downto 8) & '0';
         imm(31 downto 12) <= (others => inst(31));
 
-      when "1101111" =>   -- Jump and Link operations
+      when "1101111" => -- Jump and Link operations
+        rs1 <= (others => '0');
+        rs2 <= (others => '0');
         rd <= inst(11 downto 7);
         alu_op <= "0000";
         alu_src <= '1';
@@ -132,19 +140,35 @@ begin
         imm(31 downto 20) <= (others => inst(31));
         
       when "1100111" =>   -- JALR
-        rs1       <= inst(19 downto 15);
-        rd        <= inst(11 downto 7);
-        alu_op    <= "0000";  -- ADD: rs1 + imm
-        alu_src   <= '1';
+        rs1 <= inst(19 downto 15);
+        rs2 <= (others => '0');
+        rd <= inst(11 downto 7);
+        alu_op <= "0000";  -- ADD: rs1 + imm
+        alu_src <= '1';
         write_reg <= '1';
-        read_mem  <= '0';
+        read_mem <= '0';
         write_mem <= '0';
         mem_to_reg <= '0';
-        branch    <= '0';
-        pc_src    <= '1';
+        branch <= '0';
+        pc_src <= '1';
 
         imm(10 downto 0)  <= inst(30 downto 20);
         imm(31 downto 11) <= (others => inst(31));
+
+      when "0110111" =>   -- LUI (Load Upper Immediate)
+        rd <= inst(11 downto 7);
+        imm(19 downto 0) <= inst(31 downto 12);
+        imm(31 downto 20)  <= (others => '0');
+        alu_op <= "0000";   -- ADD: result = x0 + imm = imm
+        alu_src <= '1';      -- use immediate
+        write_reg <= '1';      -- write result to rd
+        read_mem <= '0';
+        write_mem <= '0';
+        mem_to_reg <= '0';
+        branch <= '0';
+        pc_src <= '0';
+        rs1 <= "00000"; -- x0 is always 0 → result = 0 + imm
+        rs2 <= (others => '0');
 
       when others =>
         rs1 <= (others => '0');

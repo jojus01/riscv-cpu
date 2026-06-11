@@ -1,0 +1,57 @@
+Addr     Hex          Assembly
+─────────────────────────────────────────────────────────────
+SECTION 1: R-type
+0x0000   00a00093   addi x1,  x0, 10
+0x0004   00300113   addi x2,  x0, 3
+0x0008   002081b3   add  x3,  x1, x2
+0x000C   40208233   sub  x4,  x1, x2
+0x0010   0020f2b3   and  x5,  x1, x2
+0x0014   0020e333   or   x6,  x1, x2
+0x0018   0020c3b3   xor  x7,  x1, x2
+0x001C   00209433   sll  x8,  x1, x2
+0x0020   002054b3   srl  x9,  x1, x2
+0x0024   00112533   slt  x10, x2, x1
+
+SECTION 2: I-type
+0x0028   06400093   addi  x1, x0, 100
+0x002C   00f0f113   andi  x2, x1, 15
+0x0030   0ff06193   ori   x3, x0, 255
+0x0034   00f0c213   xori  x4, x1, 15
+0x0038   00109293   slli  x5, x1, 1
+0x003C   0020d313   srli  x6, x1, 2
+0x0040   4010d393   srai  x7, x1, 1
+0x0044   0c80a413   slti  x8, x1, 200
+
+SECTION 3: Load/Store
+0x0048   00a00093   addi x1, x0, 10
+0x004C   00102023   sw   x1, 0(x0)
+0x0050   00002103   lw   x2, 0(x0)
+0x0054   00100223   sb   x1, 4(x0)
+0x0058   00404183   lbu  x3, 4(x0)
+0x005C   00101423   sh   x1, 8(x0)
+0x0060   00805283   lhu  x4, 8(x0)
+
+SECTION 4: Branch 
+0x0064   00500093   addi x1, x0, 5
+0x0068   00500113   addi x2, x0, 5
+0x006C   04208063   beq  x1, x2, +8    → skip next
+0x0070   06300193   addi x3, x0, 99    ← SKIPPED
+0x0074   02a00193   addi x3, x0, 42    ← land (x3=42)
+0x0078   00100213   addi x4, x0, 1
+0x007C   00200293   addi x5, x0, 2
+0x0080   04521063   bne  x4, x5, +8    → skip next
+0x0084   06300313   addi x6, x0, 99    ← SKIPPED
+0x0088   02a00313   addi x6, x0, 42    ← land (x6=42)
+
+SECTION 5: JAL 
+0x008C   00c000ef   jal  x1, +12       → skip next 2
+0x0090   00000013   nop                ← SKIPPED
+0x0094   00000013   nop                ← SKIPPED
+0x0098   03700113   addi x2, x0, 55    ← land (x2=55)
+
+SECTION 6: JALR 
+0x009C   0b800093   addi x1, x0, 184
+0x00A0   00408167   jalr x2, x1, 4     → target=188=0xBC
+0x00A4   00000013   nop                ← SKIPPED
+0x00A8   04d00193   addi x3, x0, 77    ← land (x3=77)
+0x00AC   00000013   nop

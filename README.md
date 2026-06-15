@@ -152,7 +152,7 @@ This bottom-up approach ensures each building block is verified before integrati
 **Digilent Nexys A7 100T**
 - FPGA: Xilinx Artix-7 XC7A100T
 - On-board RAM: 128MB DDR2
-- Clock: 100MHz (divided to 25MHz for CPU)
+- Clock: 100MHz (divided to 67MHz for CPU)
 
 ---
 

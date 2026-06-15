@@ -156,19 +156,18 @@ begin
         imm(31 downto 11) <= (others => inst(31));
 
       when "0110111" =>   -- LUI (Load Upper Immediate)
-        rd <= inst(11 downto 7);
-        imm(19 downto 0) <= inst(31 downto 12);
-        imm(31 downto 20)  <= (others => '0');
-        alu_op <= "0000";   -- ADD: result = x0 + imm = imm
-        alu_src <= '1';      -- use immediate
-        write_reg <= '1';      -- write result to rd
-        read_mem <= '0';
-        write_mem <= '0';
+        rd  <= inst(11 downto 7);
+        imm(31 downto 12) <= inst(31 downto 12);
+        imm(11 downto 0)  <= (others => '0');
+        alu_op     <= "0000";   -- ADD: result = x0 + imm = imm
+        alu_src    <= '1';      -- use immediate
+        write_reg  <= '1';      -- write result to rd
+        read_mem   <= '0';
+        write_mem  <= '0';
         mem_to_reg <= '0';
-        branch <= '0';
-        pc_src <= '0';
-        rs1 <= "00000"; -- x0 is always 0 → result = 0 + imm
-        rs2 <= (others => '0');
+        branch     <= '0';
+        pc_src     <= '0';
+        rs1        <= "00000";  -- x0 is always 0 → result = 0 + imm
 
       when others =>
         rs1 <= (others => '0');

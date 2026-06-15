@@ -14,11 +14,18 @@ architecture Behavioral of datapath is
 
   component pc is
     Port(
-    CLK,RST,PC_write : in STD_LOGIC;
+    CLK,RST : in STD_LOGIC;
     PC_in : in STD_LOGIC_VECTOR(31 downto 0);
     PC_out : out STD_LOGIC_VECTOR(31 downto 0)
         );
   end component;
+
+  component adder is 
+    Port(
+    A, B : in STD_LOGIC_VECTOR(31 downto 0);
+    RES : out STD_LOGIC_VECTOR(31 downto 0)
+        );
+  end component; 
 
   component imem is 
     Port(
@@ -63,7 +70,7 @@ architecture Behavioral of datapath is
     A,B : in STD_LOGIC_VECTOR(31 downto 0);
     OP : in STD_LOGIC_VECTOR(3 downto 0);
     RES : out STD_LOGIC_VECTOR(31 downto 0);
-    STAT_0 : out STD_LOGIC
+    STAT_EQ, STAT_LT, STAT_LTU : out STD_LOGIC
         );
   end component;
 
@@ -77,6 +84,8 @@ architecture Behavioral of datapath is
   end component;
 
   signal pc_imem : STD_LOGIC_VECTOR(31 downto 0);
+  signal pc_target : STD_LOGIC_VECTOR(31 downto 0);
+  signal pc_plus_4 : STD_LOGIC_VECTOR(31 downto 0);
   signal imem_decode : STD_LOGIC_VECTOR(31 downto 0);
   signal PC_in : STD_LOGIC_VECTOR(31 downto 0);
   signal rs1 : STD_LOGIC_VECTOR(4 downto 0);
@@ -95,10 +104,9 @@ architecture Behavioral of datapath is
   signal rs1_alu : STD_LOGIC_VECTOR(31 downto 0);
   signal rs2_alu : STD_LOGIC_VECTOR(31 downto 0);
   signal alu_src_out : STD_LOGIC_VECTOR(31 downto 0);
-  signal not_connected : STD_LOGIC;
-  signal branch_stat : STD_LOGIC;
   signal ALU_0_res : STD_LOGIC_VECTOR(31 downto 0);
   signal mem_to_reg_data : STD_LOGIC_VECTOR(31 downto 0);
+  signal reg_write : STD_LOGIC_VECTOR(31 downto 0);
   signal mem_read_data : STD_LOGIC_VECTOR(31 downto 0);
   signal pc_ex : STD_LOGIC_VECTOR(31 downto 0);
   signal inst_ex : STD_LOGIC_VECTOR(31 downto 0);
@@ -106,8 +114,10 @@ architecture Behavioral of datapath is
   signal pc_src_jump : STD_LOGIC;
   signal jalr : STD_LOGIC;
   signal pc_alu_sel : STD_LOGIC_VECTOR(31 downto 0);
+  signal pc_ex_plus_4 : STD_LOGIC_VECTOR(31 downto 0);
   signal led_reg : STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
   signal take_branch : STD_LOGIC;
+  signal stat_eq, stat_lt, stat_ltu : STD_LOGIC;
 
 begin
 
@@ -115,19 +125,34 @@ begin
    port map(
       CLK => CLK,
       RST => reset,
-      PC_write => pc_src,
       PC_in => PC_in,
       PC_out => pc_imem
   );
 
-  PC_ALU: alu
+  addr_alu: adder
    port map(
       A => pc_alu_sel,
       B => imm,
-      OP => "0000",
-      RES => PC_in,
-      STAT_0 => not_connected
+      RES => pc_target
   );
+
+  pc_adder: adder
+   port map(
+      A => pc_imem,
+      B => x"00000004",
+      RES => pc_plus_4
+  );
+
+PC_sel: process(pc_src, pc_target, pc_plus_4)
+  variable next_pc : STD_LOGIC_VECTOR(31 downto 0);
+begin
+  if pc_src = '1' then 
+    next_pc := pc_target;
+  else 
+    next_pc := pc_plus_4;
+  end if;
+  PC_in <= next_pc(31 downto 1) & '0'; -- force LSB to 0. RV32 spec
+end process PC_sel;
 
   instruction_memory: imem
    port map(
@@ -160,7 +185,7 @@ begin
       read_reg1 => rs1,
       read_reg2 => rs2,
       write_reg => rd,
-      write_data => mem_to_reg_data,
+      write_data => reg_write,
       read_data1 => rs1_alu,
       read_data2 => rs2_alu,
       write_enable => write_reg,
@@ -181,7 +206,9 @@ begin
       B => alu_src_out,
       OP => alu_op,
       RES => ALU_0_res,
-      STAT_0 => branch_stat
+      STAT_EQ => stat_eq,
+      STAT_LT => stat_lt,
+      STAT_LTU => stat_ltu
   );
 
   data_memory: data_mem
@@ -203,47 +230,14 @@ begin
   );
 
   -- Branch logic 
-  branch_evaluator: process(branch, funct3, rs1_alu, rs2_alu)
-  begin
-    take_branch <= '0';
-
-    if branch = '1' then
-      case funct3 is
-        when "000" => -- BEQ (Branch if Equal)
-          if rs1_alu = rs2_alu then 
-            take_branch <= '1'; 
-          end if;
-            
-        when "001" => -- BNE (Branch if Not Equal)
-          if rs1_alu /= rs2_alu then 
-            take_branch <= '1'; 
-          end if;
-          
-        when "100" => -- BLT (Branch Less Than)
-          if signed(rs1_alu) < signed(rs2_alu) then 
-            take_branch <= '1';
-          end if;
-            
-        when "101" => -- BGE (Branch Greater Equal)
-          if signed(rs1_alu) >= signed(rs2_alu) then 
-            take_branch <= '1'; 
-          end if;
-            
-        when "110" => -- BLTU (Branch Less Than)
-          if unsigned(rs1_alu) < unsigned(rs2_alu) then 
-            take_branch <= '1'; 
-          end if;
-          
-        when "111" => -- BGEU (Branch Greater Equal)
-          if unsigned(rs1_alu) >= unsigned(rs2_alu) then 
-            take_branch <= '1'; 
-          end if;
-            
-        when others =>
-          take_branch <= '0';
-      end case;
-    end if;
-  end process;
+  take_branch <= '1' when (branch = '1' and (
+     (funct3 = "000" and stat_eq = '1') or   -- BEQ
+     (funct3 = "001" and stat_eq = '0') or   -- BNE
+     (funct3 = "100" and stat_lt = '1') or   -- BLT
+     (funct3 = "101" and stat_lt = '0') or   -- BGE
+     (funct3 = "110" and stat_ltu = '1') or  -- BLTU
+     (funct3 = "111" and stat_ltu = '0')     -- BGEU
+  )) else '0';
 
   pc_src <= take_branch or pc_src_jump;
 
@@ -263,6 +257,9 @@ begin
 
   -- mux: pc_ex for JAL, rs1 for JALR
   pc_alu_sel <= rs1_alu when jalr = '1' else pc_ex;
+
+  pc_ex_plus_4 <= STD_LOGIC_VECTOR(unsigned(pc_ex) + 4);
+  reg_write <= pc_ex_plus_4 when pc_src_jump = '1' else mem_to_reg_data;
   
   -- LED output
   process(clk)

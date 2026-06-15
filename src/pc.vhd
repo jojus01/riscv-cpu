@@ -8,7 +8,6 @@ entity pc is
     Port (
     CLK : in STD_LOGIC; 
     RST : in STD_LOGIC;         -- reset. if it turns high pc out returns to start address
-    PC_write : in STD_LOGIC;    -- if enabled, branch jumps can be executed by inserting the target address.
     PC_in : in STD_LOGIC_VECTOR(31 downto 0); -- target address input for jumps
     PC_out : out STD_LOGIC_VECTOR(31 downto 0) -- address output 
     );
@@ -25,11 +24,7 @@ begin
     if rst = '1' then
       pc_reg <= x"00000000";    -- start address
     elsif rising_edge(clk) then
-      if PC_write = '1' then
-        pc_reg <= PC_in;
-      else
-        pc_reg <= STD_LOGIC_VECTOR(unsigned(pc_reg) + 4); -- address will be increased by 4 bytes / next instruction
-      end if;
+      pc_reg <= PC_in;
     end if;
   end process prg_counter;
 end Behavioral;

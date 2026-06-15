@@ -8,7 +8,9 @@ entity alu is
     B : in STD_LOGIC_VECTOR(31 downto 0);     -- second operand
     OP : in STD_LOGIC_VECTOR(3 downto 0);    -- operation code. Part of R-Type instruction. OP = funct7[5] & funct3
     RES : out STD_LOGIC_VECTOR(31 downto 0);
-    STAT_0 : out STD_LOGIC
+    STAT_EQ : out STD_LOGIC;
+    STAT_LT : out STD_LOGIC;
+    STAT_LTU : out STD_LOGIC
     );
 end alu;
 
@@ -48,6 +50,8 @@ begin
     
   end process alu_operations;
 
-  STAT_0 <=  '1' when  RES = x"00000000" else '0'; -- nessesary for conditional jumps like "Branch if Equal" instruction
+  STAT_EQ <= '1' when signed(A) = signed(B) else '0';
+  STAT_LT <= '1' when signed(A) < signed(B) else '0';
+  STAT_LTU <= '1' when unsigned(A) < unsigned(B) else '0';
 
 end Behavioral;
